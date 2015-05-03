@@ -1,0 +1,9 @@
+[Unit]
+Description=Test Redis
+After=test-datastore.service
+Requires=test-datastore.service
+
+[Service]
+Environment=NAME=test-redis
+ExecStart=/usr/bin/docker run --rm --name ${NAME} --volumes-from test-datastore redis
+ExecStop=/usr/bin/docker stop ${NAME}

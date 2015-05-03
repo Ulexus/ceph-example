@@ -1,0 +1,18 @@
+[Unit]
+Description=Test Datastore
+After=docker.service
+Before=test-redis.service
+Requires=test-redis.service
+
+[Service]
+Environment=RBD_IMAGE=test-redis
+Environment=RBD_FS=btrfs
+Environment=RBD_TARGET=/data
+ExecStartPre=/usr/sbin/modprobe rbd
+ExecStart=/usr/bin/docker run --rm --name test-datastore -e RBD_IMAGE=${RBD_IMAGE} -e RBD_FS=${RBD_FS} -e RBD_TARGET=${RBD_TARGET} -v /etc/ceph:/etc/ceph:ro --privileged --net=host -v /dev:/dev -v /proc:/host/proc ceph/rbd-volume
+ExecStop=/usr/bin/docker stop test-datastore
+ExecStopPost=-/usr/bin/umount ${RBD_TARGET}
+ExecStopPost=/usr/bin/docker run --rm -v /etc/ceph:/etc/ceph:ro --privileged --net=host -v /dev:/dev -e RBD_IMAGE=${RBD_IMAGE} ceph/rbd-volume unmap
+
+[X-Fleet]
+MachineOf=test-redis.service
